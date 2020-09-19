@@ -10,6 +10,11 @@ import android.media.MediaPlayer;
 import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.View;
+import android.widget.Button;
+import android.widget.ImageButton;
+import android.widget.SeekBar;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.android.gms.maps.GoogleMap;
@@ -20,11 +25,17 @@ import java.io.IOException;
 
 public class MainActivity extends AppCompatActivity implements OnMapReadyCallback {
     private GoogleMap mMap;
+    private ImageButton playBtn;
+    private SeekBar positionBar;
+    private TextView songNameLabel;
     private MediaPlayer mediaPlayer;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        playBtn = findViewById(R.id.playBtn);
+        songNameLabel = findViewById(R.id.songName);
         //音楽再生
         audioPlay();
 
@@ -42,6 +53,18 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     @Override
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
+    }
+    public void playBtnClick(View view) {
+        if (!mediaPlayer.isPlaying()) {
+            // 停止中
+            mediaPlayer.start();
+            playBtn.setBackgroundResource(R.drawable.stop);
+
+        } else {
+            // 再生中
+            mediaPlayer.pause();
+            playBtn.setBackgroundResource(R.drawable.play);
+        }
     }
 
 
