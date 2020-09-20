@@ -1,131 +1,143 @@
 package com.example.bgmgo;
 
-import androidx.annotation.RequiresApi;
-import androidx.appcompat.app.AppCompatActivity;
-
 import android.app.FragmentTransaction;
-import android.content.res.AssetFileDescriptor;
-import android.media.AudioManager;
 import android.media.MediaPlayer;
-import android.os.Build;
 import android.os.Bundle;
-import android.util.Log;
+import android.os.Handler;
+import android.os.Message;
 import android.view.View;
-import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.SeekBar;
 import android.widget.TextView;
-import android.widget.Toast;
+
+import androidx.appcompat.app.AppCompatActivity;
 
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.MapFragment;
 import com.google.android.gms.maps.OnMapReadyCallback;
-
-import java.io.IOException;
 
 public class MainActivity extends AppCompatActivity implements OnMapReadyCallback {
     private GoogleMap mMap;
     private ImageButton playBtn;
     private SeekBar positionBar;
     private TextView songNameLabel;
-    private MediaPlayer mediaPlayer;
+    private MediaPlayer mp;
+    private int totalTime;
+
+
+    //開始時の処理
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        //UIのid取得
         playBtn = findViewById(R.id.playBtn);
         songNameLabel = findViewById(R.id.songName);
-        //音楽再生
-        audioPlay();
+
+
+        //mediaPlayerの初期化
+        mp = MediaPlayer.create(this, R.raw.music);
+        mp.setLooping(true);
+        mp.start();
+        mp.seekTo(0);
+        mp.setVolume(0.5f, 0.5f);
+        totalTime = mp.getDuration();
+
+
+        // 再生位置
+        positionBar = findViewById(R.id.seekBar);
+        positionBar.setMax(totalTime);
+        positionBar.setOnSeekBarChangeListener(
+                new SeekBar.OnSeekBarChangeListener() {
+                    @Override
+                    public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                        if (fromUser) {
+                            mp.seekTo(progress);
+                            positionBar.setProgress(progress);
+                        }
+                    }
+
+                    @Override
+                    public void onStartTrackingTouch(SeekBar seekBar) {
+
+                    }
+
+                    @Override
+                    public void onStopTrackingTouch(SeekBar seekBar) {
+
+                    }
+                }
+        );
+
 
         // MapFragmentの生成
         MapFragment mapFragment = MapFragment.newInstance();
-
         // MapViewをMapFragmentに変更する
         FragmentTransaction fragmentTransaction =
                 getFragmentManager().beginTransaction();
         fragmentTransaction.add(R.id.mapView, mapFragment);
         fragmentTransaction.commit();
-
         mapFragment.getMapAsync(this);
+
+        /**TimerTask task = new TimerTask(){
+            public void run() {
+                while (mp != null) {
+                    try {
+                        Message msg = new Message();
+                        msg.what = mp.getCurrentPosition();
+                        handler.sendMessage(msg);
+                        Thread.sleep(1000);
+                    } catch (InterruptedException e) {}
+                }
+            }
+        };**/
     }
+
+
     @Override
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
     }
+
+
+// Thread (positionBar・経過時間ラベル・残り時間ラベルを更新する)
+       new public void Thread(new Runnable() {
+            public void run() {
+               while (mp != null) {
+                   try {
+                       Message msg = new Message();
+                       msg.what = mp.getCurrentPosition();
+                       handler.sendMessage(msg);
+                       Thread.sleep(1000);
+                   } catch (InterruptedException e) {}
+               }
+            }
+        })
+    Thread.start();
+
+
+    private Handler handler = new Handler(new Handler.Callback() {
+            @Override
+            public boolean handleMessage(Message msg) {
+                int currentPosition = msg.what;
+                // 再生位置を更新
+                positionBar.setProgress(currentPosition);
+                return true;
+            }
+        });
+
+
+    //再生ボタンの処理
     public void playBtnClick(View view) {
-        if (!mediaPlayer.isPlaying()) {
+        if (!mp.isPlaying()) {
             // 停止中
-            mediaPlayer.start();
+            mp.start();
             playBtn.setBackgroundResource(R.drawable.stop);
 
         } else {
             // 再生中
-            mediaPlayer.pause();
+            mp.pause();
             playBtn.setBackgroundResource(R.drawable.play);
         }
-    }
-
-
-    private void audioPlay() {
-
-        if (mediaPlayer == null) {
-            // audio ファイルを読出し
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-                if (audioSetup()){
-                    Toast.makeText(getApplication(), "Rread audio file", Toast.LENGTH_SHORT).show();
-                }
-                else{
-                    Toast.makeText(getApplication(), "Error: read audio file", Toast.LENGTH_SHORT).show();
-                    return;
-                }
-            }
-        }
-        else{
-            // 繰り返し再生する場合
-            mediaPlayer.stop();
-            mediaPlayer.reset();
-            // リソースの解放
-            mediaPlayer.release();
-        }
-
-        // 再生する
-        mediaPlayer.start();
-
-        // 終了を検知するリスナー
-        mediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
-            @Override
-            public void onCompletion(MediaPlayer mp) {
-                Log.d("debug","end of audio");
-                //audioStop();
-            }
-        });
-    }
-
-    @RequiresApi(api = Build.VERSION_CODES.KITKAT)
-    private boolean audioSetup() {
-        boolean fileCheck = false;
-
-        // インタンスを生成
-        mediaPlayer = new MediaPlayer();
-
-        //音楽ファイル名, あるいはパス
-        String filePath = "Hide-and-seek.mp3";
-
-        // assetsから mp3 ファイルを読み込み
-        try (AssetFileDescriptor afdescripter = getAssets().openFd(filePath);) {
-            // MediaPlayerに読み込んだ音楽ファイルを指定
-            mediaPlayer.setDataSource(afdescripter.getFileDescriptor(),
-                    afdescripter.getStartOffset(),
-                    afdescripter.getLength());
-            // 音量調整を端末のボタンに任せる
-            setVolumeControlStream(AudioManager.STREAM_MUSIC);
-            mediaPlayer.prepare();
-            fileCheck = true;
-        } catch (IOException e1) {
-            e1.printStackTrace();
-        }
-
-        return fileCheck;
     }}
