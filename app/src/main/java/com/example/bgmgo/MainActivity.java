@@ -1,15 +1,20 @@
 package com.example.bgmgo;
 
+import android.annotation.SuppressLint;
 import android.app.FragmentTransaction;
 import android.media.MediaPlayer;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.Looper;
 import android.os.Message;
+import android.util.Log;
 import android.view.View;
 import android.widget.ImageButton;
 import android.widget.SeekBar;
 import android.widget.TextView;
 
+import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.google.android.gms.maps.GoogleMap;
@@ -19,10 +24,10 @@ import com.google.android.gms.maps.OnMapReadyCallback;
 public class MainActivity extends AppCompatActivity implements OnMapReadyCallback {
     private GoogleMap mMap;
     private ImageButton playBtn;
-    private SeekBar positionBar;
     private TextView songNameLabel;
     private MediaPlayer mp;
     private int totalTime;
+    private static final String TAG = "MyActivity";
 
 
     //開始時の処理
@@ -35,6 +40,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         playBtn = findViewById(R.id.playBtn);
         songNameLabel = findViewById(R.id.songName);
 
+        songNameLabel.setSelected(true);
 
         //mediaPlayerの初期化
         mp = MediaPlayer.create(this, R.raw.music);
@@ -42,36 +48,9 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         mp.start();
         mp.seekTo(0);
         mp.setVolume(0.5f, 0.5f);
-        totalTime = mp.getDuration();
 
 
-        // 再生位置
-        positionBar = findViewById(R.id.seekBar);
-        positionBar.setMax(totalTime);
-        positionBar.setOnSeekBarChangeListener(
-                new SeekBar.OnSeekBarChangeListener() {
-                    @Override
-                    public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-                        if (fromUser) {
-                            mp.seekTo(progress);
-                            positionBar.setProgress(progress);
-                        }
-                    }
-
-                    @Override
-                    public void onStartTrackingTouch(SeekBar seekBar) {
-
-                    }
-
-                    @Override
-                    public void onStopTrackingTouch(SeekBar seekBar) {
-
-                    }
-                }
-        );
-
-
-        // MapFragmentの生成
+    // MapFragmentの生成
         MapFragment mapFragment = MapFragment.newInstance();
         // MapViewをMapFragmentに変更する
         FragmentTransaction fragmentTransaction =
@@ -80,18 +59,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         fragmentTransaction.commit();
         mapFragment.getMapAsync(this);
 
-        /**TimerTask task = new TimerTask(){
-            public void run() {
-                while (mp != null) {
-                    try {
-                        Message msg = new Message();
-                        msg.what = mp.getCurrentPosition();
-                        handler.sendMessage(msg);
-                        Thread.sleep(1000);
-                    } catch (InterruptedException e) {}
-                }
-            }
-        };**/
     }
 
 
@@ -99,33 +66,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
     }
-
-
-// Thread (positionBar・経過時間ラベル・残り時間ラベルを更新する)
-       new public void Thread(new Runnable() {
-            public void run() {
-               while (mp != null) {
-                   try {
-                       Message msg = new Message();
-                       msg.what = mp.getCurrentPosition();
-                       handler.sendMessage(msg);
-                       Thread.sleep(1000);
-                   } catch (InterruptedException e) {}
-               }
-            }
-        })
-    Thread.start();
-
-
-    private Handler handler = new Handler(new Handler.Callback() {
-            @Override
-            public boolean handleMessage(Message msg) {
-                int currentPosition = msg.what;
-                // 再生位置を更新
-                positionBar.setProgress(currentPosition);
-                return true;
-            }
-        });
 
 
     //再生ボタンの処理
@@ -140,4 +80,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             mp.pause();
             playBtn.setBackgroundResource(R.drawable.play);
         }
-    }}
+    }
+
+}

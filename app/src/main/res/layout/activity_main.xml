@@ -13,16 +13,8 @@
     <com.google.android.gms.maps.MapView
         android:id="@+id/mapView"
         android:layout_width="match_parent"
-        android:layout_height="532dp"
+        android:layout_height="565dp"
         android:layout_gravity="center" />
-
-    <TextView
-        android:id="@+id/songName"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:gravity="center"
-        android:text="Hide-and-seek"
-        android:textSize="24sp" />
 
     <LinearLayout
         android:layout_width="368dp"
@@ -30,10 +22,20 @@
         android:gravity="top"
         android:orientation="horizontal">
 
-        <SeekBar
-            android:id="@+id/seekBar"
-            android:layout_width="293dp"
-            android:layout_height="48dp" />
+        <TextView
+            android:id="@+id/songName"
+            android:layout_width="285dp"
+            android:layout_height="match_parent"
+            android:duplicateParentState="true"
+            android:ellipsize="marquee"
+            android:focusable="true"
+            android:focusableInTouchMode="true"
+            android:gravity="center"
+            android:marqueeRepeatLimit="marquee_forever"
+            android:scrollHorizontally="true"
+            android:singleLine="true"
+            android:text="Hide-and-seek / zukisuzuki"
+            android:textSize="24sp" />
 
         <ImageButton
             android:id="@+id/playBtn"
