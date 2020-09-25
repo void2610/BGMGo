@@ -22,6 +22,7 @@ import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.FragmentActivity;
 
+import com.google.android.gms.maps.CameraUpdate;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.MapFragment;
@@ -37,6 +38,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     private MediaPlayer mp;
     private int totalTime;
     private static final String TAG = "MyActivity";
+    private String locationProvider;
 
     LocationManager locationManager;
 
@@ -62,6 +64,28 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
         }
 
+        // 位置情報を管理している LocationManager のインスタンスを生成する
+        LocationManager locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
+        String locationProvider = null;
+
+        // GPSが利用可能になっているかどうかをチェック
+        if (locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
+            locationProvider = LocationManager.GPS_PROVIDER;
+        } // GPSプロバイダーが有効になっていない場合は基地局情報が利用可能になっているかをチェック
+        else if (locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER)) {
+            locationProvider = LocationManager.NETWORK_PROVIDER;
+        }
+        // いずれも利用可能でない場合は、GPSを設定する画面に遷移する
+        else {
+            Intent settingsIntent = new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS);
+            startActivity(settingsIntent);
+            return;
+        }
+        // 最新の位置情報
+        Location location = locationManager.getLastKnownLocation(locationProvider);
+        if (location != null) {
+            Log.d(TAG, "onCreate:Lat "+ location.getLatitude()+ ", onCreate:Lon" +location.getLongitude());
+        }
 
         //UIのid取得
         playBtn = findViewById(R.id.playBtn);
@@ -111,7 +135,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                     new String[]{Manifest.permission.ACCESS_FINE_LOCATION,}, 1000);
 
             Log.d("debug", "checkSelfPermission false");
-            return;
         }
     }
 
@@ -134,19 +157,24 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         }
     }
 
+    //位置情報変更時
     @Override
     public void onLocationChanged(Location location) {
-        // 緯度の表示
-        int latitude = (int) (location.getLatitude()*1e6);
-        String str1 = "Latitude:"+location.getLatitude();
-        Log.d(str1, "onLocationChanged: ");
-        // 経度の表示
-        int longitude =(int)(location.getLongitude()*1e6);
-        String str2 = "Longtude:"+location.getLongitude();
-        Log.d(str2, "onLocationChanged: ");
-        //表示
-
-        LatLng newLocation = new LatLng(latitude,longitude);
+        if(mMap!=null){
+            // 緯度の表示
+            float latitude = (float) (location.getLatitude());
+            String str1 = "Latitude:"+location.getLatitude();
+            Log.d(str1, "onLocationChanged: ");
+            // 経度の表示
+            float longitude =(float) (location.getLongitude()*1e6);
+            String str2 = "Longitude:"+location.getLongitude();
+            Log.d(str2, "onLocationChanged: ");
+            //表示
+            LatLng newLocation = new LatLng(latitude,longitude);
+            mMap.moveCamera(CameraUpdateFactory.newLatLng(newLocation));
+            CameraUpdate cameraUpdate = CameraUpdateFactory.newLatLngZoom(newLocation,2);
+            mMap.moveCamera(cameraUpdate);
+        }
     }
 
     @Override
@@ -167,6 +195,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     @Override
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
+
     }
 
 
