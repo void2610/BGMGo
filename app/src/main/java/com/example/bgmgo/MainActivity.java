@@ -101,7 +101,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         mp.setVolume(0.5f, 0.5f);
 
 
-    // MapFragmentの生成
+        // MapFragmentの生成
         MapFragment mapFragment = MapFragment.newInstance();
         // MapViewをMapFragmentに変更する
         FragmentTransaction fragmentTransaction =
@@ -162,17 +162,15 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     public void onLocationChanged(Location location) {
         if(mMap!=null){
             // 緯度の表示
-            float latitude = (float) (location.getLatitude());
             String str1 = "Latitude:"+location.getLatitude();
             Log.d(str1, "onLocationChanged: ");
             // 経度の表示
-            float longitude =(float) (location.getLongitude()*1e6);
             String str2 = "Longitude:"+location.getLongitude();
             Log.d(str2, "onLocationChanged: ");
             //表示
-            LatLng newLocation = new LatLng(latitude,longitude);
+            LatLng newLocation = new LatLng(location.getLatitude(),location.getLongitude());
             mMap.moveCamera(CameraUpdateFactory.newLatLng(newLocation));
-            CameraUpdate cameraUpdate = CameraUpdateFactory.newLatLngZoom(newLocation,2);
+            CameraUpdate cameraUpdate = CameraUpdateFactory.newLatLngZoom(newLocation,14);
             mMap.moveCamera(cameraUpdate);
         }
     }
@@ -195,6 +193,9 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     @Override
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
+        LatLng sydney = new LatLng(-34, 151);
+        mMap.addMarker(new MarkerOptions().position(sydney).title("Marker in Sydney"));
+        mMap.moveCamera(CameraUpdateFactory.newLatLng(sydney));
 
     }
 
