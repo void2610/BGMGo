@@ -4,9 +4,11 @@ import android.Manifest;
 import android.app.FragmentTransaction;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.graphics.Bitmap;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
+import android.media.MediaMetadataRetriever;
 import android.media.MediaPlayer;
 import android.os.Bundle;
 import android.provider.Settings;
@@ -28,6 +30,8 @@ import com.google.android.gms.maps.MapFragment;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.model.LatLng;
 
+import wseemann.media.FFmpegMediaMetadataRetriever;
+
 public class MainActivity extends AppCompatActivity implements OnMapReadyCallback, LocationListener {
     private GoogleMap mMap;
     private ImageButton playBtn;
@@ -36,6 +40,8 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     private int totalTime;
     private static final String TAG = "MyActivity";
     private String locationProvider;
+    int lastTimeNumber = 0;
+    String userLocation = "outdoor";
 
     LocationManager locationManager;
 
@@ -85,15 +91,13 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         //UIのid取得
         playBtn = findViewById(R.id.playBtn);
         songNameLabel = findViewById(R.id.songName);
-
         songNameLabel.setSelected(true);
 
         //mediaPlayerの初期化
-        mp = MediaPlayer.create(this, R.raw.music);
-        mp.setLooping(true);
-        mp.start();
-        mp.seekTo(0);
-        mp.setVolume(0.5f, 0.5f);
+        //mp.setOnCompletionListener((MediaPlayer.OnCompletionListener) this);
+        startNextTrack();
+
+
 
 
         // MapFragmentの生成
@@ -105,7 +109,15 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         fragmentTransaction.commit();
         mapFragment.getMapAsync(this);
 
+        /**mp.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
+            public void onCompletion(MediaPlayer mp) {
+                Log.v("MediaPlayer", "next");
+                startNextTrack();
+
+            }
+        });**/
     }
+
 
     private void locationStart() {
         Log.d("debug", "locationStart()");
@@ -217,6 +229,70 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             playBtn.setBackgroundResource(R.drawable.play);
         }
     }
+
+    public void startNextTrack() {
+        int path = R.raw.outdoor0;
+        String songTitle = "songtitle";
+        int random = 0;
+        for (int i = 0; i < 1;){
+            random = (int) (Math.random() *2);
+            if(random != lastTimeNumber){
+                i = 2;
+            }
+        }
+
+
+            if(random == 0 && userLocation == "outdoor"){
+                path = R.raw.outdoor0;
+                songTitle = "Hide-and-seek / Zukisuzuki";
+            }
+            else if(random == 1 && userLocation == "outdoor"){
+                path = R.raw.outdoor1;
+                songTitle = "High Speed Flash / Vegaenduro";
+            }
+
+
+            if(random == 0 && userLocation == "indoor"){
+                path = R.raw.indoor0;
+                songTitle = "Deal / AShamaluevMusic";
+            }
+            else if(random == 1 && userLocation == "indoor"){
+                path = R.raw.indoor1;
+                songTitle = "Basic drives / Expendable Friend";
+            }
+
+
+            if(random == 0 && userLocation == "nature"){
+                path = R.raw.nature0;
+                songTitle = "Purpose / AShamaluevMusic";
+            }
+            else if(random == 1 && userLocation == "nature") {
+                path = R.raw.nature1;
+                songTitle = "Films & Serials / AShamaluevMusic";
+            }
+
+
+            lastTimeNumber = random;
+
+            mp = MediaPlayer.create(getApplicationContext(), path);
+            mp.setLooping(false);
+            mp.seekTo(0);
+
+            FFmpegMediaMetadataRetriever retriever = new  FFmpegMediaMetadataRetriever();
+            retriever.release();
+            songNameLabel.setText(songTitle);
+            Log.v("MediaPlayer", "next isssssssssssssssssssssssssssssssssssssssssssssssss" + songTitle);
+            mp.start();
+
+            mp.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
+                public void onCompletion(MediaPlayer mp) {
+                    Log.v("MediaPlayer", "next");
+                    startNextTrack();
+
+                }
+            });
+    }
 }
+
 
 

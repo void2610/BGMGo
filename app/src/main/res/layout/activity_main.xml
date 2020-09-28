@@ -39,7 +39,7 @@
                 android:marqueeRepeatLimit="marquee_forever"
                 android:scrollHorizontally="true"
                 android:singleLine="true"
-                android:text="Hide-and-seek / zukisuzuki"
+                android:text="Hide-and-seek - zukisuzuki"
                 android:textSize="24sp" />
 
             <ImageButton
