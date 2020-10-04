@@ -27,10 +27,7 @@
             android:name="org.apache.http.legacy"
             android:required="true" />
 
-        <activity android:name=".MainActivity"
-            tools:ignore="ExtraText">
-            android:hardwareAccelerated="true"
-            <intent-filter>
+        <activity android:name=".MainActivity" tools:ignore="ExtraText">android:hardwareAccelerated="true"<intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />

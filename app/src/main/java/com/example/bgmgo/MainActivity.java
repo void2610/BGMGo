@@ -93,8 +93,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         songNameLabel = findViewById(R.id.songName);
         songNameLabel.setSelected(true);
 
-        //mediaPlayerの初期化
-        //mp.setOnCompletionListener((MediaPlayer.OnCompletionListener) this);
         startNextTrack();
 
 
@@ -109,13 +107,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         fragmentTransaction.commit();
         mapFragment.getMapAsync(this);
 
-        /**mp.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
-            public void onCompletion(MediaPlayer mp) {
-                Log.v("MediaPlayer", "next");
-                startNextTrack();
-
-            }
-        });**/
     }
 
 
@@ -232,68 +223,69 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
     public void startNextTrack() {
         int path = R.raw.outdoor0;
-        String songPath = "outdoor0";
+        String songPath = "outdoor" + 0;
         String songTitle = "songtitle";
         int random = 0;
         for (int i = 0; i < 1;){
-            random = (int) (Math.random() *2);
+            random = (int) (Math.random() *4);
+            songPath = userLocation + random;
+            Log.v("abcd" , "Path is " + songPath);
             if(random != lastTimeNumber){
                 i = 2;
             }
-            songPath = userLocation + random;
         }
 
 
 
-            if(songPath == "outdoor0"){
+            if(userLocation == "outdoor" && random == 0){
                 path = R.raw.outdoor0;
                 songTitle = "Hide-and-seek / Zukisuzuki";
             }
-            else if(songPath == "outdoor1"){
+            else if(userLocation == "outdoor" && random == 1){
                 path = R.raw.outdoor1;
                 songTitle = "High Speed Flash / Vegaenduro";
             }
-            else if(songPath == "outdoor2"){
+            else if(userLocation == "outdoor" && random == 2){
                 path = R.raw.outdoor2;
                 songTitle = "Blood on the Dance Floor;  / AShamaluevMusic";
             }
-            else if(songPath == "outdoor3"){
+            else if(userLocation == "outdoor" && random == 3){
                 path = R.raw.outdoor3;
                 songTitle = "Corporate Motivation / AShamaluevMusic";
             }
 
 
-            if(songPath == "indoor0"){
+            if(userLocation == "indoor" && random == 0){
                 path = R.raw.indoor0;
                 songTitle = "Deal / AShamaluevMusic";
             }
-            else if(songPath == "indoor1"){
+            else if(userLocation == "indoor" && random == 1){
                 path = R.raw.indoor1;
                 songTitle = "Basic drives / Expendable Friend";
             }
-            else if(songPath == "indoor2"){
+            else if(userLocation == "indoor" && random == 2){
                 path = R.raw.indoor2;
                 songTitle = "Stuff / AShamaluevMusic";
             }
-            else if(songPath == "indoor3"){
+            else if(userLocation == "indoor" && random == 3){
                 path = R.raw.indoor3;
                 songTitle = "Proud / AShamaluevMusic";
             }
 
 
-            if(songPath == "nature0"){
+            if(userLocation == "nature" && random == 0){
                 path = R.raw.nature0;
                 songTitle = "Purpose / AShamaluevMusic";
             }
-            else if(songPath == "nature1") {
+            else if(userLocation == "nature" && random == 1) {
                 path = R.raw.nature1;
                 songTitle = "Films & Serials / AShamaluevMusic";
             }
-            else if(songPath == "nature2") {
+            else if(userLocation == "nature" && random == 2) {
                 path = R.raw.nature2;
                 songTitle = "Loveliness / AShamaluevMusic";
             }
-            else if(songPath == "nature3") {
+            else if(userLocation == "nature" && random == 3) {
                 path = R.raw.nature3;
                 songTitle = "Epic Emotional / AShamaluevMusic";
             }
