@@ -232,6 +232,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
     public void startNextTrack() {
         int path = R.raw.outdoor0;
+        String songPath = "outdoor0";
         String songTitle = "songtitle";
         int random = 0;
         for (int i = 0; i < 1;){
@@ -239,36 +240,62 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             if(random != lastTimeNumber){
                 i = 2;
             }
+            songPath = userLocation + random;
         }
 
 
-            if(random == 0 && userLocation == "outdoor"){
+
+            if(songPath == "outdoor0"){
                 path = R.raw.outdoor0;
                 songTitle = "Hide-and-seek / Zukisuzuki";
             }
-            else if(random == 1 && userLocation == "outdoor"){
+            else if(songPath == "outdoor1"){
                 path = R.raw.outdoor1;
                 songTitle = "High Speed Flash / Vegaenduro";
             }
+            else if(songPath == "outdoor2"){
+                path = R.raw.outdoor2;
+                songTitle = "Blood on the Dance Floor;  / AShamaluevMusic";
+            }
+            else if(songPath == "outdoor3"){
+                path = R.raw.outdoor3;
+                songTitle = "Corporate Motivation / AShamaluevMusic";
+            }
 
 
-            if(random == 0 && userLocation == "indoor"){
+            if(songPath == "indoor0"){
                 path = R.raw.indoor0;
                 songTitle = "Deal / AShamaluevMusic";
             }
-            else if(random == 1 && userLocation == "indoor"){
+            else if(songPath == "indoor1"){
                 path = R.raw.indoor1;
                 songTitle = "Basic drives / Expendable Friend";
             }
+            else if(songPath == "indoor2"){
+                path = R.raw.indoor2;
+                songTitle = "Stuff / AShamaluevMusic";
+            }
+            else if(songPath == "indoor3"){
+                path = R.raw.indoor3;
+                songTitle = "Proud / AShamaluevMusic";
+            }
 
 
-            if(random == 0 && userLocation == "nature"){
+            if(songPath == "nature0"){
                 path = R.raw.nature0;
                 songTitle = "Purpose / AShamaluevMusic";
             }
-            else if(random == 1 && userLocation == "nature") {
+            else if(songPath == "nature1") {
                 path = R.raw.nature1;
                 songTitle = "Films & Serials / AShamaluevMusic";
+            }
+            else if(songPath == "nature2") {
+                path = R.raw.nature2;
+                songTitle = "Loveliness / AShamaluevMusic";
+            }
+            else if(songPath == "nature3") {
+                path = R.raw.nature3;
+                songTitle = "Epic Emotional / AShamaluevMusic";
             }
 
 
