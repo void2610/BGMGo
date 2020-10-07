@@ -41,7 +41,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     private static final String TAG = "MyActivity";
     private String locationProvider;
     int lastTimeNumber = 0;
-    String userLocation = "outdoor";
+    String userLocation = "road";
 
     LocationManager locationManager;
 
@@ -237,19 +237,19 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
 
 
-            if(userLocation == "outdoor" && random == 0){
+            if(userLocation == "road" && random == 0){
                 path = R.raw.outdoor0;
                 songTitle = "Hide-and-seek / Zukisuzuki";
             }
-            else if(userLocation == "outdoor" && random == 1){
+            else if(userLocation == "road" && random == 1){
                 path = R.raw.outdoor1;
                 songTitle = "High Speed Flash / Vegaenduro";
             }
-            else if(userLocation == "outdoor" && random == 2){
+            else if(userLocation == "road" && random == 2){
                 path = R.raw.outdoor2;
                 songTitle = "Blood on the Dance Floor;  / AShamaluevMusic";
             }
-            else if(userLocation == "outdoor" && random == 3){
+            else if(userLocation == "road" && random == 3){
                 path = R.raw.outdoor3;
                 songTitle = "Corporate Motivation / AShamaluevMusic";
             }
