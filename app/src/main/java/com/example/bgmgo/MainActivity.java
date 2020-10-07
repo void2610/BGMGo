@@ -5,20 +5,27 @@ import android.app.FragmentTransaction;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.Color;
+import android.graphics.Point;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
 import android.media.MediaMetadataRetriever;
 import android.media.MediaPlayer;
+import android.os.Build;
 import android.os.Bundle;
 import android.provider.Settings;
 import android.util.Log;
+import android.view.Display;
 import android.view.View;
+import android.view.WindowManager;
 import android.widget.ImageButton;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
@@ -40,12 +47,15 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     private int totalTime;
     private static final String TAG = "MyActivity";
     private String locationProvider;
+    int screenCenterX;
+    int screenCenterY;
     int lastTimeNumber = 0;
     String userLocation = "road";
 
     LocationManager locationManager;
 
     //開始時の処理
+    @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR1)
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -93,7 +103,20 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         songNameLabel = findViewById(R.id.songName);
         songNameLabel.setSelected(true);
 
+
+        WindowManager wm = (WindowManager)getSystemService(WINDOW_SERVICE);
+        Display disp = wm.getDefaultDisplay();
+
+        Point realSize = new Point();
+        disp.getRealSize(realSize);
+
+        int realScreenWidth = realSize.x;
+        int realScreenHeight = realSize.y;
+        screenCenterX = realScreenWidth / 2;
+        screenCenterY = realScreenHeight / 2 + 500;
+
         startNextTrack();
+        //GetRGB();
 
 
 
@@ -310,6 +333,25 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
                 }
             });
+    }
+    public void GetRGB() {
+        Bitmap bmp1 = BitmapFactory.decodeResource(getResources(), R.drawable.screenshottest);
+        int colour = bmp1.getPixel(screenCenterX, screenCenterY);
+        int red = Color.red(colour);
+        int blue = Color.blue(colour);
+        int green = Color.green(colour);
+        Log.v("RGB", "r,g,b = " + red  + "," + green + "," + blue);
+        int rgb = red + green + blue;
+        if(rgb == 240240240){
+            userLocation = "indoor";
+        }
+        if(rgb == 242242242 || rgb == 248249251 || rgb == 255255255){
+            userLocation = "road";
+        }
+        if(rgb == 192236173 || rgb == 170218255){
+            userLocation = "nature";
+        }
+
     }
 }
 
