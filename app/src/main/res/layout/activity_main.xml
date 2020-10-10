@@ -10,7 +10,9 @@
 
     <!--ソース上でフラグメントを生成して地図を表示する-->
 
+
     <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/constraintLayout"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         tools:layout_editor_absoluteX="0dp"
@@ -29,7 +31,7 @@
 
             <TextView
                 android:id="@+id/songName"
-                android:layout_width="275dp"
+                android:layout_width="301dp"
                 android:layout_height="40dp"
                 android:duplicateParentState="true"
                 android:ellipsize="marquee"
@@ -39,12 +41,12 @@
                 android:marqueeRepeatLimit="marquee_forever"
                 android:scrollHorizontally="true"
                 android:singleLine="true"
-                android:text="Hide-and-seek - zukisuzuki"
+                android:text="@string/SongTittle"
                 android:textSize="24sp" />
 
             <ImageButton
                 android:id="@+id/playBtn"
-                android:layout_width="match_parent"
+                android:layout_width="wrap_content"
                 android:layout_height="match_parent"
                 android:layout_weight="1"
                 android:background="@drawable/stop"
@@ -63,7 +65,10 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintHorizontal_bias="0.0"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintVertical_bias="0.0" />
+
+
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 

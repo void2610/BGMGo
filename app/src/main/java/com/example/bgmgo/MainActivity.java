@@ -1,26 +1,36 @@
 package com.example.bgmgo;
 
 import android.Manifest;
+import android.annotation.SuppressLint;
 import android.app.FragmentTransaction;
+import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.graphics.Point;
+import android.hardware.display.DisplayManager;
+import android.hardware.display.VirtualDisplay;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
-import android.media.MediaMetadataRetriever;
+import android.media.Image;
+import android.media.ImageReader;
 import android.media.MediaPlayer;
+import android.media.projection.MediaProjection;
+import android.media.projection.MediaProjectionManager;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Environment;
 import android.provider.Settings;
+import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.Display;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.ImageButton;
+import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -34,28 +44,50 @@ import com.google.android.gms.maps.CameraUpdate;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.MapFragment;
+import com.google.android.gms.maps.MapView;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.model.LatLng;
+import java.nio.ByteBuffer;
 
 import wseemann.media.FFmpegMediaMetadataRetriever;
 
+import static android.graphics.PixelFormat.*;
+
 public class MainActivity extends AppCompatActivity implements OnMapReadyCallback, LocationListener {
+    private static final String TAG = "MyActivity";
+
+    //地図
     private GoogleMap mMap;
+    LocationManager locationManager;
+    private MapView mapView;
+
+    //音楽
     private ImageButton playBtn;
     private TextView songNameLabel;
     private MediaPlayer mp;
     private int totalTime;
-    private static final String TAG = "MyActivity";
     private String locationProvider;
+    String userLocation = "road";
+    private boolean TrackStartOnce=true;
+
+    //RGB
     int screenCenterX;
     int screenCenterY;
     int lastTimeNumber = 0;
-    String userLocation = "road";
+    //ScreenShot
+    private MediaProjectionManager mpManager;
+    private MediaProjection mProjection;
+    private static final int REQUEST_MEDIA_PROJECTION = 1001;
 
-    LocationManager locationManager;
+    private int displayWidth, displayHeight;
+    private ImageReader imageReader;
+    private VirtualDisplay virtualDisplay;
+    private int screenDensity;
+    private ImageView imageView;
+    private boolean canTakeSS = false;
 
     //開始時の処理
-    @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR1)
+    @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -115,12 +147,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         screenCenterX = realScreenWidth / 2;
         screenCenterY = realScreenHeight / 2 + 500;
 
-        startNextTrack();
-        //GetRGB();
-
-
-
-
         // MapFragmentの生成
         MapFragment mapFragment = MapFragment.newInstance();
         // MapViewをMapFragmentに変更する
@@ -129,6 +155,23 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         fragmentTransaction.add(R.id.mapView, mapFragment);
         fragmentTransaction.commit();
         mapFragment.getMapAsync(this);
+
+        //ScreenShot
+        // 画面の縦横サイズとdpを取得
+        DisplayMetrics displayMetrics = new DisplayMetrics();
+        getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
+        screenDensity = displayMetrics.densityDpi;
+        displayWidth = displayMetrics.widthPixels;
+        displayHeight = displayMetrics.heightPixels;
+
+        mpManager = (MediaProjectionManager)
+                getSystemService(MEDIA_PROJECTION_SERVICE);
+
+        // permissionを確認するintentを投げ、ユーザーの許可・不許可を受け取る
+        if(mpManager != null){
+            startActivityForResult(mpManager.createScreenCaptureIntent(),
+                    REQUEST_MEDIA_PROJECTION);
+        }
 
     }
 
@@ -179,6 +222,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     }
 
     //位置情報変更時
+    @RequiresApi(api = Build.VERSION_CODES.KITKAT)
     @Override
     public void onLocationChanged(Location location) {
         if (mMap != null) {
@@ -193,6 +237,14 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             mMap.moveCamera(CameraUpdateFactory.newLatLng(newLocation));
             CameraUpdate cameraUpdate = CameraUpdateFactory.newLatLngZoom(newLocation, 18);
             mMap.moveCamera(cameraUpdate);
+
+            if (canTakeSS){
+                getRGB();
+                if (TrackStartOnce){
+                    startNextTrack();
+                }
+                TrackStartOnce=false;
+            }
         }
     }
 
@@ -214,19 +266,10 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     @Override
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
-        if (mMap != null) {
-            if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-                // TODO: Consider calling
-                //    ActivityCompat#requestPermissions
-                // here to request the missing permissions, and then overriding
-                //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-                //                                          int[] grantResults)
-                // to handle the case where the user grants the permission. See the documentation
-                // for ActivityCompat#requestPermissions for more details.
-                return;
-            }
-            mMap.setMyLocationEnabled(true);
-        }
+        mMap.getUiSettings().setZoomControlsEnabled(false);
+        mMap.getUiSettings().setScrollGesturesEnabled(false);
+        mMap.getUiSettings().setRotateGesturesEnabled(false);
+        mMap.getUiSettings().setZoomGesturesEnabled(false);
     }
 
 
@@ -260,55 +303,55 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
 
 
-            if(userLocation == "road" && random == 0){
+            if(userLocation.equals("road") && random == 0){
                 path = R.raw.outdoor0;
                 songTitle = "Hide-and-seek / Zukisuzuki";
             }
-            else if(userLocation == "road" && random == 1){
+            else if(userLocation.equals("road") && random == 1){
                 path = R.raw.outdoor1;
                 songTitle = "High Speed Flash / Vegaenduro";
             }
-            else if(userLocation == "road" && random == 2){
+            else if(userLocation.equals("road") && random == 2){
                 path = R.raw.outdoor2;
                 songTitle = "Blood on the Dance Floor;  / AShamaluevMusic";
             }
-            else if(userLocation == "road" && random == 3){
+            else if(userLocation.equals("road") && random == 3){
                 path = R.raw.outdoor3;
                 songTitle = "Corporate Motivation / AShamaluevMusic";
             }
 
 
-            if(userLocation == "indoor" && random == 0){
+            if(userLocation.equals("indoor") && random == 0){
                 path = R.raw.indoor0;
                 songTitle = "Deal / AShamaluevMusic";
             }
-            else if(userLocation == "indoor" && random == 1){
+            else if(userLocation.equals("indoor") && random == 1){
                 path = R.raw.indoor1;
                 songTitle = "Basic drives / Expendable Friend";
             }
-            else if(userLocation == "indoor" && random == 2){
+            else if(userLocation.equals("indoor") && random == 2){
                 path = R.raw.indoor2;
                 songTitle = "Stuff / AShamaluevMusic";
             }
-            else if(userLocation == "indoor" && random == 3){
+            else if(userLocation.equals("indoor") && random == 3){
                 path = R.raw.indoor3;
                 songTitle = "Proud / AShamaluevMusic";
             }
 
 
-            if(userLocation == "nature" && random == 0){
+            if(userLocation.equals("nature") && random == 0){
                 path = R.raw.nature0;
                 songTitle = "Purpose / AShamaluevMusic";
             }
-            else if(userLocation == "nature" && random == 1) {
+            else if(userLocation.equals("nature") && random == 1) {
                 path = R.raw.nature1;
                 songTitle = "Films & Serials / AShamaluevMusic";
             }
-            else if(userLocation == "nature" && random == 2) {
+            else if(userLocation.equals("nature") && random == 2) {
                 path = R.raw.nature2;
                 songTitle = "Loveliness / AShamaluevMusic";
             }
-            else if(userLocation == "nature" && random == 3) {
+            else if(userLocation.equals("nature") && random == 3) {
                 path = R.raw.nature3;
                 songTitle = "Epic Emotional / AShamaluevMusic";
             }
@@ -323,7 +366,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             FFmpegMediaMetadataRetriever retriever = new  FFmpegMediaMetadataRetriever();
             retriever.release();
             songNameLabel.setText(songTitle);
-            Log.v("MediaPlayer", "next isssssssssssssssssssssssssssssssssssssssssssssssss" + songTitle);
+            Log.v("MediaPlayer", "next isssssssssssssssssssssssssssssssssssssssssssssssss: " + songTitle);
             mp.start();
 
             mp.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
@@ -334,24 +377,100 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 }
             });
     }
-    public void GetRGB() {
-        Bitmap bmp1 = BitmapFactory.decodeResource(getResources(), R.drawable.screenshottest);
+
+    // ユーザーの許可を受け取る
+    @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        if (REQUEST_MEDIA_PROJECTION == requestCode) {
+            if (resultCode != RESULT_OK) {
+                // 拒否された
+                Toast.makeText(this,
+                        "User cancelled", Toast.LENGTH_LONG).show();
+                return;
+            }
+            // 許可された結果を受け取る
+            setUpMediaProjection(resultCode, data);
+            canTakeSS = true;
+        }
+    }
+
+    @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
+    private void setUpMediaProjection(int code, Intent intent) {
+        mProjection = mpManager.getMediaProjection(code, intent);
+        setUpVirtualDisplay();
+    }
+
+    @SuppressLint("WrongConstant")
+    @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
+    private void setUpVirtualDisplay() {
+        imageReader = ImageReader.newInstance(
+                displayWidth, displayHeight, RGBA_8888, 2);
+
+        virtualDisplay = mProjection.createVirtualDisplay("ScreenCapture",
+                displayWidth, displayHeight, screenDensity,
+                DisplayManager.VIRTUAL_DISPLAY_FLAG_AUTO_MIRROR,
+                imageReader.getSurface(), null, null);
+    }
+
+    @RequiresApi(api = Build.VERSION_CODES.KITKAT)
+    private Bitmap getScreenshot() {
+        // ImageReaderから画面を取り出す
+        Log.d("debug", "getScreenshot");
+
+        Image image = imageReader.acquireLatestImage();
+        Image.Plane[] planes = image.getPlanes();
+        ByteBuffer buffer = planes[0].getBuffer();
+
+        int pixelStride = planes[0].getPixelStride();
+        int rowStride = planes[0].getRowStride();
+        int rowPadding = rowStride - pixelStride * displayWidth;
+
+        // バッファからBitmapを生成
+        Bitmap bitmap = Bitmap.createBitmap(
+                displayWidth + rowPadding / pixelStride, displayHeight,
+                Bitmap.Config.ARGB_8888);
+        bitmap.copyPixelsFromBuffer(buffer);
+        image.close();
+        return bitmap;
+    }
+
+    @RequiresApi(api = Build.VERSION_CODES.KITKAT)
+    public void getRGB() {
+        Log.d(TAG, "getRGB: getRGB");
+        Bitmap bmp1 = getScreenshot();
         int colour = bmp1.getPixel(screenCenterX, screenCenterY);
         int red = Color.red(colour);
         int blue = Color.blue(colour);
         int green = Color.green(colour);
-        Log.v("RGB", "r,g,b = " + red  + "," + green + "," + blue);
-        int rgb = red + green + blue;
-        if(rgb == 240240240){
+        Log.d("RGB", "r,g,b = " + red  + "," + green + "," + blue);
+        String rgb = Integer.toString(red) + Integer.toString(green) + Integer.toString(blue);
+        Log.d(TAG, "getRGB: "+rgb);
+        if(rgb.equals("240240240")){
             userLocation = "indoor";
+            Log.d("RGB", "getRGB: "+"userLocation:"+userLocation);
         }
-        if(rgb == 242242242 || rgb == 248249251 || rgb == 255255255){
+        if(rgb.equals("242242242") || rgb.equals("248249250") || rgb.equals("255255255")){
             userLocation = "road";
+            Log.d("RGB", "getRGB: "+"userLocation:"+userLocation);
         }
-        if(rgb == 192236173 || rgb == 170218255){
+        if(rgb.equals("192236173") || rgb.equals("170218255") || rgb.equals("223223223") || rgb.equals("197232197") || rgb.equals("173219255")){
             userLocation = "nature";
+            Log.d("RGB", "getRGB: "+"userLocation:"+userLocation);
         }
 
+    }
+
+    @RequiresApi(api = Build.VERSION_CODES.KITKAT)
+    @Override
+    protected void onDestroy() {
+        if (virtualDisplay != null) {
+            Log.d("debug","release VirtualDisplay");
+            virtualDisplay.release();
+        }
+        super.onDestroy();
     }
 }
 
